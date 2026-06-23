@@ -1,4 +1,5 @@
-from rest_framework import permissions, viewsets
+from rest_framework import filters, permissions, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Categoria, Impuesto, Lote, Marca, Producto, ProductoComponente, Serie, UnidadMedida
 from .serializers import (
@@ -55,7 +56,9 @@ class ProductoViewSet(ScopedToEmpresaMixin, viewsets.ModelViewSet):
         "unidad_medida", "impuesto", "moneda_costo", "moneda_precio",
     ).prefetch_related("componentes", "lotes")
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["tipo", "marca", "categoria", "active"]
+    search_fields = ["codigo", "nombre", "sku", "codigo_barras"]
 
     def get_serializer_class(self):
         if self.action == "list":

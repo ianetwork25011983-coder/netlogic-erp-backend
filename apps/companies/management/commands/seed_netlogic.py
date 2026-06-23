@@ -44,6 +44,7 @@ class Command(BaseCommand):
         self._seed_proveedores(empresa)
         self._seed_productos(empresa)
         self._seed_stock(empresa)
+        self._seed_cajas(empresa)
         self._assign_superuser(empresa)
 
     # ------------------------------------------------------------------
@@ -590,6 +591,25 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     # 6. ASIGNAR SUPERUSUARIO
     # ------------------------------------------------------------------
+    def _seed_cajas(self, empresa):
+        from apps.treasury.models import Caja
+        cajas_data = [
+            (self._sucursal, "CJ-001", "Caja Principal"),
+            (self._sucursal, "CJ-002", "Caja 2"),
+        ]
+        created = 0
+        self._cajas = []
+        for sucursal, codigo, nombre in cajas_data:
+            pv = sucursal.puntos_venta.filter(active=True).first()
+            c, is_new = Caja.objects.get_or_create(
+                sucursal=sucursal, codigo=codigo,
+                defaults=dict(empresa=empresa, nombre=nombre, punto_venta=pv),
+            )
+            self._cajas.append(c)
+            if is_new:
+                created += 1
+        self.stdout.write(f"  [OK] Cajas: {created} nuevas (total {len(cajas_data)})")
+
     def _assign_superuser(self, empresa):
         updated = 0
         for user in User.objects.filter(is_superuser=True):
