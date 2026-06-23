@@ -160,7 +160,7 @@ class BillingService:
         documento.total = total_doc
         documento.total_pyg = total_pyg
         documento.estado = DocumentoVenta.ESTADO_EMITIDA
-        if tipo_documento == DocumentoVenta.TIPO_FACTURA and condicion_venta == DocumentoVenta.CONDICION_CREDITO:
+        if tipo_documento == DocumentoVenta.TIPO_FACTURA:
             documento.saldo_pendiente = total_doc
         documento.save()
 
