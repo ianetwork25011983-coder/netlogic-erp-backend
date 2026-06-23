@@ -254,15 +254,14 @@ class Command(BaseCommand):
                 defaults=dict(
                     empresa=self._empresa, sucursal=self._sucursal,
                     proveedor=proveedor, moneda=self._pyg,
-                    estado=estado, solicitante=self._admin,
-                    fecha_entrega_estimada=datetime.date.today() + datetime.timedelta(days=7),
+                    estado=estado, usuario=self._admin,
                 ),
             )
             if created:
                 for codigo, qty, precio in items:
                     if codigo in prods:
                         OrdenCompraItem.objects.get_or_create(
-                            orden=oc, producto=prods[codigo],
+                            orden_compra=oc, producto=prods[codigo],
                             defaults=dict(
                                 cantidad=Decimal(str(qty)),
                                 precio_unitario=precio,
