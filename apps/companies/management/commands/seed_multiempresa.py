@@ -45,16 +45,51 @@ class Command(BaseCommand):
         self._impuestos = self._ensure_impuestos()
         self._unidades = self._ensure_unidades()
 
+        self._seed_netlogic_user()
         self._seed_ferreteria()
         self._seed_electrico()
         self._seed_supermercado()
         self._seed_agro()
 
         self.stdout.write("\nCredenciales de acceso:")
+        self.stdout.write("  0) Netlogic TI : admin.netlogic@erptest.py  / Admin1234!")
         self.stdout.write("  1) Ferreteria  : admin.ferreteria@erptest.py / Admin1234!")
         self.stdout.write("  2) Electrico   : admin.electro@erptest.py   / Admin1234!")
         self.stdout.write("  3) Supermercado: admin.plaza@erptest.py     / Admin1234!")
         self.stdout.write("  4) Agro        : admin.agro@erptest.py      / Admin1234!")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 0. NETLOGIC (empresa de TI creada por seed_netlogic)
+    #    Solo crea el usuario admin dedicado; los datos ya existen.
+    # ─────────────────────────────────────────────────────────────────────────
+    def _seed_netlogic_user(self):
+        self.stdout.write(self.style.MIGRATE_HEADING("\n--- 0. Netlogic S.A. (TI) ---"))
+        from apps.companies.models import Empresa, Sucursal
+        emp = Empresa.objects.filter(ruc="80061234-5").first()
+        if not emp:
+            self.stdout.write("  [WARN] Empresa Netlogic no encontrada. Correr seed_netlogic primero.")
+            return
+        suc = Sucursal.objects.filter(empresa=emp, es_casa_matriz=True).first()
+        if suc:
+            user, created = User.objects.get_or_create(
+                email="admin.netlogic@erptest.py",
+                defaults=dict(
+                    first_name="Admin", last_name="Netlogic",
+                    empresa=emp, is_active=True, is_staff=True,
+                    must_change_password=False,
+                ),
+            )
+            if created:
+                user.set_password(_PW)
+                user.save()
+            else:
+                if user.empresa_id != emp.pk:
+                    user.empresa = emp
+                    user.save(update_fields=["empresa"])
+            user.sucursales.add(suc)
+            self.stdout.write(f"  [OK] Netlogic: usuario admin.netlogic@erptest.py {'creado' if created else 'actualizado'}")
+        else:
+            self.stdout.write("  [WARN] Sin sucursal en Netlogic")
 
     # ─────────────────────────────────────────────────────────────────────────
     # OBJETOS GLOBALES (compartidos entre tenants, sin FK de empresa)
